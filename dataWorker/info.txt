@@ -1,0 +1,9 @@
+Job Titles present in this Dataset:
+
+Data Scientist, Data Science Associate, Data Science Consultant, Data Science, Senior Data Scientist, Junior Data Scientist, Lead Data Scientist, Data Science Manager, Data Scientist - Trainee, Data Science Lead, Data Analyst, Data Engineer, Machine Learning Engineer, Machine Learning Software Engineer, Software Engineer - Machine Learning, Machine Learning Engineer/Data Scientist, Machine Learning Consultant, Machine Learning Data Associate, Machine Learning Data Associate I, Machine Learning Associate, Machine Learning Data Associate II, Associate Machine Learning Engineer, Machine Learning Data Analyst, Senior Machine Learning Engineer, Machine Learning Scientist, Machine Learning Developer
+
+-----------------------------------------------------------------------------------------
+
+Location present in this Dataset:
+
+Bangalore, Pune, Hyderabad, New Delhi, Mumbai
