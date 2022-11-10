@@ -1,0 +1,29 @@
+{ 
+   "Comment":"Transaction Processor State Machine Using SQS",
+   "StartAt":"ProcessTransaction",
+   "States":{ 
+      "ProcessTransaction":{ 
+         "Type":"Pass",
+         "Next":"BroadcastToSqs"
+      },
+      "BroadcastToSqs":{ 
+         "Type":"Task",
+         "Resource":"arn:aws:states:::sqs:sendMessage",
+         "Parameters":{ 
+            "QueueUrl":"",
+            "MessageBody":{ 
+               "TransactionId.$":"$.TransactionId",
+               "Type.$":"$.Type"
+            }
+         },
+         "End":true
+      }
+   }
+}
+
+Input
+---
+{
+  "TransactionId": "abc",
+  "Type": "PURCHASE"
+}
