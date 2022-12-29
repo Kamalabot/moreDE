@@ -1,0 +1,22 @@
+Motivation : Master the analysis process using the SQL query language. There 
+are visualisation softwares out there which can provide exotic function. But the 
+regular analysis and report generation requires faster output and standard chart
+formats. 
+
+Even standard chart formats, a lot can be packed. I want to master that process 
+and then create dash-boards with it. 
+
+This folder will contain series of analysis scripts with queries in them, with 
+following format.
+
+
+1) There will be an sql query involving the dataset in question.
+
+2) Then there will be possible charts that can be created using the dataset
+
+3) Further questions that the data can give rise
+
+4) possible tangent of bringing un-related data to join and create new charts
+
+The idea is to train on both querying the database for data and
+ querying the data for insights 

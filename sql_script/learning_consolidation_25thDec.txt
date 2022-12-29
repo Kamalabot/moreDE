@@ -1,0 +1,27 @@
+Following is the list of points that i learnt today
+
+1) The power of indexing became very clear after the indices where created 
+on the existing columns in the database tables. 
+
+2) Creating sequences and then attaching them to columns in the tables. Later using 
+those sequences as the reference for foreign key 
+
+3) Till now I have been joining the tables without any foreign key. In case of the 
+analytical analytical process this is not very important. But for transaction it 
+becomes crucial
+
+Using the dbeaver ide for querying. Suddenly querying the database seems to be 
+extremely pleasant. In fact I am ready to try out the queries, because they are less 
+costly to type. 
+- Auto completion of the table names, and column names
+- Adding the table abbreviated call name
+- using the from clause first to create the source tables, joining them
+- then using the auto complete to select the tables that I am looking for.
+
+To create a conceptual data model, the above exercise is not appropriate. The creation 
+of index, foreign key are done at the physical level of data storage inside the 
+database. 
+
+For the conceptual model to establish the connectivity between the tables using 
+join, and various pre-defined and aggregate functions would be more beneficial
+ 
