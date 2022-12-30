@@ -4,6 +4,7 @@
 can store rational numbers while the int and bigint can store only 
 whole number*/
 
+/*REMEMBER ==> FJWGSO*/
 create table customers_orders_mnth_metrics(
 	customer_id INT,
 	order_month char(7),

@@ -1,3 +1,5 @@
+/*REMEMBER ==> FJWGSO*/
+
 /*lets start the power up with pivot table*/
 
 create extension tablefunc 
