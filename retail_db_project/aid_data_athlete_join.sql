@@ -146,6 +146,7 @@ from athlete_code atc join primary_country pc2
 on pc2.country_code = atc.nationality
 join aid_country ac 
 on ac.donor = pc2.country_name 
+limit 5
 
 /*The tables have been successfull glued together. It took 35 ~ 39ms to get the data
  * lets do some sanity checks on the data.
@@ -229,7 +230,7 @@ where a.nation = 'Korea'
 
 create table aid_agg_2013(
 	d_id serial primary key,
-	aid_donor varchar references primary_country(country_name),
+	aid_donor varchar unique references primary_country(country_name),
 	donor_code varchar,
 	donated_amount numeric
 	)
@@ -259,6 +260,7 @@ group by aa.donor
 select count(*) from aid_agg_2013 	
 
 /*returns 25. which is not correct answer.*/
+ 	
 
 select aa.donor
 from aid_data aa  
@@ -290,3 +292,27 @@ from aid_agg_2013 agg join athletes_pc ap
 on agg.donor_code = ap.nationality
 
 /*That result came in 11ms with 2ms for fetching*/
+
+drop table if exists donor_athlete_table;
+
+create table donor_athlete_table(
+	athlete_id int references athletes_pc(athlete_id),
+	athlete_name varchar,
+	country_name varchar references aid_agg_2013(aid_donor),
+	country_code varchar references primary_country(country_code),
+	sport varchar,
+	gold_medal int,
+	silver_medal int,
+	bronze_medal int,
+	donated_amount numeric
+)
+
+insert into donor_athlete_table (athlete_id ,athlete_name, country_name ,country_code , sport, gold_medal , silver_medal ,bronze_medal ,donated_amount)
+select ap.athlete_id ,ap.name, agg.aid_donor,ap.nationality, ap.sport, ap.gold, ap.silver, ap.bronze, agg.donated_amount
+from aid_agg_2013 agg join athletes_pc ap 
+on agg.donor_code = ap.nationality
+
+
+select * from donor_athlete_table dat order by athlete_id 
+
+
