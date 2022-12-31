@@ -76,6 +76,23 @@ from donor_table dt join athlete_code ac
 on dt.country_code = ac.nationality
 limit 5
 
+/*checking the query plan*/
+
+explain analyze with 
+donor_table as (
+select ad."year" , ad.donor, pc.country_code,ad .commitment_amount_usd_constant, ad.coalesced_purpose_code ,ad.coalesced_purpose_name
+from aid_data ad join primary_country pc 
+on pc.country_name  = ad.donor 
+),
+athlete_code as(
+select pc.country_name, a.nationality ,a."name" ,a.sex ,a.date_of_birth 
+from athletes a join primary_country pc 
+on a.nationality = pc.country_code 
+) select dt.*, ac.*
+from donor_table dt join athlete_code ac 
+on dt.country_code = ac.nationality
+limit 5
+
 /*I did not realize important aspect. Time. 
 The aid data is multi year data. Athelete is a snapshot*/
 
@@ -130,6 +147,25 @@ on ac.donor = pc.country_name
 /*Now we have snapshot on which the athlete data can be joined*/
 
 with 
+athlete_code as (
+select pc.country_name, a.*  
+from athletes a join primary_country pc 
+on a.nationality = pc.country_code 
+),
+aid_country as(
+	select ad.donor, sum(ad.commitment_amount_usd_constant) as aid_donated
+	from aid_data ad 
+	where ad."year" = 2012
+	group by ad.donor 
+)
+select atc.name, atc.sport, atc.gold, atc.silver, atc.bronze, atc.nationality, ac.donor, ac.aid_donated
+from athlete_code atc join primary_country pc2  
+on pc2.country_code = atc.nationality
+join aid_country ac 
+on ac.donor = pc2.country_name 
+limit 5
+
+explain analyse with 
 athlete_code as (
 select pc.country_name, a.*  
 from athletes a join primary_country pc 
@@ -314,5 +350,7 @@ on agg.donor_code = ap.nationality
 
 
 select * from donor_athlete_table dat order by athlete_id 
+
+
 
 
