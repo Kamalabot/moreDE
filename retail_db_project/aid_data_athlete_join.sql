@@ -183,7 +183,7 @@ from athletes a, primary_country pc
 where a.nationality = pc.country_code 
 
 /*lets create the athlete_with primary_country reference table first*/
-
+drop table if exists athletes_pc;
 
 create table athletes_pc (
 	athlete_id serial primary key,
@@ -213,12 +213,28 @@ select count(1)
 from athletes_pc a  
 where a.nation = 'United States'
 
+select count(1)
+from athletes_pc a  
+where a.nation = 'Korea' /*<< this will not return value because of the issue in the primary_country table*/
+
+update primary_country
+set country_name = 'Korea'
+where country_code = 'KOR'
+
+/*update the tables again, then you will get the results*/
+
+select count(1)
+from athletes_pc a  
+where a.nation = 'Korea' 
+
 create table aid_agg_2013(
 	d_id serial primary key,
 	aid_donor varchar references primary_country(country_name),
 	donor_code varchar,
 	donated_amount numeric
 	)
+
+drop table if exists aid_agg_2013; 	
 	
 insert into aid_agg_2013 (aid_donor, donor_code, donated_amount)
 select q.donor, pic.country_code ,q.aid_donated
@@ -230,21 +246,47 @@ from (
 )q join primary_country pic  
 on q.donor = pic.country_name 
 
-select count(*) from aid_agg_2013 	
-/*returns 25*/	
+select count(*) 
+from(
+	 select aa.donor, sum(aa.commitment_amount_usd_constant) as aid_donated
+from aid_data aa  
+where aa."year" = 2012
+group by aa.donor
+) q
+
+/*returns 26 which is correct*/	
 	
-select count(*)
-from (
-select aa.donor, sum(aa.commitment_amount_usd_constant) as aid_donated
+select count(*) from aid_agg_2013 	
+
+/*returns 25. which is not correct answer.*/
+
+select aa.donor
 from aid_data aa  
 where aa."year" = 2012
 group by aa.donor	
-	)q
+except 	
+select a.aid_donor
+from aid_agg_2013 a 
 	
-/*returns 26. which is the correct answer.*/
+/*The missing country is Korea. But why?*/
 
-from aid_agg_2013 
-	
-	
-	
+select pc.country_code , pc.country_name  
+from primary_country pc 
+where pc.country_name = 'Korea'
 
+/*returns empty...*/
+
+select pc.country_code , pc.country_name  
+from primary_country pc 
+where pc.country_name ~ 'Korea'
+
+/*There are two Korea remember... North and South...
+ * it is better to update the primary_country table*/
+
+/*Now to the test that we were planning all along..*/
+
+select ap.name, ap.sport, ap.gold, ap.silver, ap.bronze, ap.nationality, agg.aid_donor, agg.donated_amount
+from aid_agg_2013 agg join athletes_pc ap 
+on agg.donor_code = ap.nationality
+
+/*That result came in 11ms with 2ms for fetching*/
