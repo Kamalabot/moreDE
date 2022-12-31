@@ -7,6 +7,20 @@ from aid_data ad
 -----------------------------------------------------------------
 Seq Scan on aid_data ad  (cost=0.00..2485.40 rows=98540 width=81)*/
 
+explain select ad.*
+from aid_data ad 
+order by ad."year" 
+
+
+/* Notice the startup cost comes up due to sorting
+QUERY PLAN                                                             |
+-----------------------------------------------------------------------+
+Sort  (cost=15376.52..15622.87 rows=98540 width=81)                    |
+  Sort Key: year                                                       |
+  ->  Seq Scan on aid_data ad  (cost=0.00..2485.40 rows=98540 width=81)|
+*/
+
+
 explain analyze select aa.*
 from aid_agg_2013 aa 
 
@@ -15,6 +29,79 @@ from aid_agg_2013 aa
 Seq Scan on aid_agg_2013 aa  (cost=0.00..16.30 rows=630 width=100) (actual time=0.017..0.024 rows=26 loops=1)|
 Planning Time: 0.101 ms                                                                                      |
 Execution Time: 0.048 ms                                                                                     |*/
+
+
+explain analyze select aa.*
+from aid_agg_2013 aa
+where aa.aid_donor = 'Germany'
+
+/*QUERY PLAN                                                                                                                                  |
+--------------------------------------------------------------------------------------------------------------------------------------------+
+Index Scan using aid_agg_2013_aid_donor_key on aid_agg_2013 aa  (cost=0.15..8.17 rows=1 width=100) (actual time=0.406..0.408 rows=1 loops=1)|
+  Index Cond: ((aid_donor)::text = 'Germany'::text)                                                                                         |
+Planning Time: 29.610 ms                                                                                                                    |
+Execution Time: 22.511 ms                                                                                                                   |*/
+
+explain analyze select aa.*
+from aid_agg_2013 aa
+where aa.donated_amount > 5000000
+
+/*QUERY PLAN                                                                                                   |
+-------------------------------------------------------------------------------------------------------------+
+Seq Scan on aid_agg_2013 aa  (cost=0.00..17.88 rows=210 width=100) (actual time=0.024..0.033 rows=25 loops=1)|
+  Filter: (donated_amount > '100000'::numeric)                                                               |
+  Rows Removed by Filter: 1                                                                                  |
+Planning Time: 13.411 ms                                                                                     |
+Execution Time: 0.058 ms                                                                                     |*/
+
+explain select aa.*
+from aid_data aa
+where aa.commitment_amount_usd_constant > 50000 and aa.donor = 'Kuwait'
+
+/*QUERY PLAN                                                                                           |
+-----------------------------------------------------------------------------------------------------+
+Seq Scan on aid_data aa  (cost=0.00..2978.10 rows=8 width=81)                                        |
+  Filter: ((commitment_amount_usd_constant > '50000'::double precision) AND (donor = 'Kuwait'::text))|*/
+
+
+explain select pc.country_name, a.nationality ,a."name" ,a.sex ,a.date_of_birth 
+from athletes a join primary_country pc 
+on a.nationality = pc.country_code 
+limit 5
+/*
+QUERY PLAN                                                                                                      |
+----------------------------------------------------------------------------------------------------------------+
+Limit  (cost=0.16..0.42 rows=5 width=45)                                                                        |
+  ->  Nested Loop  (cost=0.16..604.78 rows=11538 width=45)                                                      |
+        ->  Seq Scan on athletes a  (cost=0.00..282.38 rows=11538 width=32)                                     |
+        ->  Memoize  (cost=0.16..0.18 rows=1 width=17)                                                          |
+              Cache Key: a.nationality                                                                          |
+              Cache Mode: logical                                                                               |
+              ->  Index Scan using primary_country_pkey on primary_country pc  (cost=0.15..0.17 rows=1 width=17)|
+                    Index Cond: ((country_code)::text = a.nationality)                                          |*/
+
+explain analyze select pc.country_name, a.nationality ,a."name" ,a.sex ,a.date_of_birth 
+from athletes a join primary_country pc 
+on a.nationality = pc.country_code 
+limit 5
+/*
+QUERY PLAN                                                                                                                                                |
+----------------------------------------------------------------------------------------------------------------------------------------------------------+
+Limit  (cost=0.16..0.42 rows=5 width=45) (actual time=0.034..0.073 rows=5 loops=1)                                                                        |
+  ->  Nested Loop  (cost=0.16..604.78 rows=11538 width=45) (actual time=0.033..0.069 rows=5 loops=1)                                                      |
+        ->  Seq Scan on athletes a  (cost=0.00..282.38 rows=11538 width=32) (actual time=0.012..0.013 rows=5 loops=1)                                     |
+        ->  Memoize  (cost=0.16..0.18 rows=1 width=17) (actual time=0.009..0.009 rows=1 loops=5)                                                          |
+              Cache Key: a.nationality                                                                                                                    |
+              Cache Mode: logical                                                                                                                         |
+              Hits: 0  Misses: 5  Evictions: 0  Overflows: 0  Memory Usage: 1kB                                                                           |
+              ->  Index Scan using primary_country_pkey on primary_country pc  (cost=0.15..0.17 rows=1 width=17) (actual time=0.006..0.006 rows=1 loops=5)|
+                    Index Cond: ((country_code)::text = a.nationality)                                                                                    |
+Planning Time: 0.378 ms                                                                                                                                   |
+Execution Time: 0.122 ms                                                                                                                                  |*/
+
+
+
+
 
 /*The tables for the below scripts may not there... so don't execute*/
 
@@ -86,3 +173,10 @@ Sort  (cost=340.36..350.75 rows=4156 width=60) (actual time=5.849..6.979 rows=41
   ->  Seq Scan on donor_athlete_table dat  (cost=0.00..90.56 rows=4156 width=60) (actual time=0.027..1.510 rows=4156 loops=1)|
 Planning Time: 0.398 ms                                                                                                      |
 Execution Time: 7.617 ms                                                                                                     |*/
+
+
+
+explain select * from donor_athlete_table dat 
+
+
+
