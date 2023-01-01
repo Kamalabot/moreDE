@@ -96,10 +96,144 @@ select ht.* from holiday_table ht limit 5
 
 /*join_table1: holidays and oil data*/
 
-select fot.day_date, ht.day_date, ht.holiday_type, ht.holiday_locale,
-        ht.holiday_localename,fot.dcoilwtico
-from full_oil_table fot join holiday_table ht 
+drop table if exists full_oil_holiday_table;
+
+create table if not exists full_oil_holiday_table(
+	oil_id serial primary key,
+	day_date date references date_spine(date_series), 
+	holiday_type VARCHAR, 
+	holiday_locale VARCHAR,
+	holiday_localename VARCHAR,
+	dcoilwtico numeric,
+	description varchar,
+	transferred boolean
+)
+
+insert into full_oil_holiday_table(day_date, holiday_type, holiday_locale,
+		holiday_localename, dcoilwtico, description, transferred) 
+select fot.day_date, coalesce(ht.holiday_type,'working') as holiday_type, 
+		coalesce(ht.holiday_locale,'National') as holiday_locale,
+        coalesce(ht.holiday_localename,'National') as holiday_localename,
+        fot.dcoilwtico, ht.description , ht.transferred 
+from full_oil_table fot left join holiday_table ht 
 on fot.day_date = ht.day_date
 
-
 /*table 3: Store numbers*/
+
+drop if table exists stores_table;
+
+create table if not exists stores_table(
+	store_nbr int primary key unique,
+	city varchar,
+	state varchar,
+	type varchar(1),
+	cluster int
+)
+
+copy stores_table from '/run/media/solverbot/repoA/gitFolders/moreDE/store_sales_data_analysis/stores.csv' csv header delimiter ',';
+
+select *
+from stores_table 
+limit 5;
+
+/*table 4: train table*/
+
+drop table if exists train_table;
+
+create table if not exists train_table(
+	id int primary key unique, 
+	day_date date references date_spine(date_series),
+    store_nbr int references stores_table(store_nbr),
+    family varchar,
+    sales numeric, 
+    onpromotion int
+)
+
+copy train_table from '/run/media/solverbot/repoA/gitFolders/moreDE/store_sales_data_analysis/train.csv' csv header delimiter ',';
+
+select * from train_table limit 5
+
+/*Referencing the date column to date_spine changed the format automatically */
+
+/*Table 5: Transaction tables*/
+
+drop table if exists transaction_table;
+
+create table if not exists transaction_table(
+	txn_date date references date_spine(date_series),
+   	store_nbr INT references stores_table(store_nbr),
+   	transactions INT
+)
+
+copy transaction_table from '/run/media/solverbot/repoA/gitFolders/moreDE/store_sales_data_analysis/transactions.csv' csv header delimiter ',';
+
+/*Lets begin the joining process of train, txn and stores table*/
+
+drop table if exists fact_table
+
+create table if not exists fact_table(
+	ftt_id bigserial primary key,
+	oil_id int references full_oil_holiday_table(oil_id),
+	train_id int references train_table(id),
+	day_date date references date_spine(date_series), 
+	store_nbr int references stores_table(store_nbr) 
+)
+
+
+select foht.oil_id, tt.id, tt.day_date,tt.store_nbr
+FROM train_table tt JOIN stores_table st
+on tt.store_nbr = st.store_nbr
+LEFT JOIN full_oil_holiday_table foht
+on foht.day_date = tt.day_date
+
+/*note the above includes the holiday details also.*/
+
+select foht.oil_id, tt.id, tt.day_date,tt.store_nbr,
+tt."family",st."type",st.city, coalesce(tt.sales,0) as sales, 
+coalesce(txt.transactions,0) as transactions 
+FROM train_table tt JOIN stores_table st
+on tt.store_nbr = st.store_nbr 
+LEFT JOIN full_oil_holiday_table foht
+on foht.day_date = tt.day_date
+left join transaction_table txt
+on txt.txn_date = tt.day_date 
+and txt.store_nbr = tt.store_nbr 
+
+/*Send the data in batches*/
+
+
+insert into fact_table(oil_id,train_id,day_date, store_nbr)
+select foht.oil_id, tt.id, tt.day_date,tt.store_nbr
+FROM train_table tt JOIN stores_table st
+on tt.store_nbr = st.store_nbr 
+LEFT JOIN full_oil_holiday_table foht
+on foht.day_date = tt.day_date
+left join transaction_table txt
+on txt.txn_date = tt.day_date 
+and txt.store_nbr = tt.store_nbr
+offset 1555510 limit 500000
+
+
+select count(*) from fact_table ft 
+
+
+create table if not exists unref_fact_table(
+	ftt_id bigserial primary key,
+	oil_id int,
+	train_id int,
+	day_date date, 
+	store_nbr int 
+)
+
+
+insert into unref_fact_table(oil_id,train_id,day_date, store_nbr)
+select foht.oil_id, tt.id, tt.day_date,tt.store_nbr
+FROM train_table tt JOIN stores_table st
+on tt.store_nbr = st.store_nbr 
+LEFT JOIN full_oil_holiday_table foht
+on foht.day_date = tt.day_date
+left join transaction_table txt
+on txt.txn_date = tt.day_date 
+and txt.store_nbr = tt.store_nbr
+
+having multiple references to the tables is going to create unncessary 
