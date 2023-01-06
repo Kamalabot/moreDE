@@ -225,6 +225,9 @@ create table if not exists unref_fact_table(
 	store_nbr int 
 )
 
+/*Foreign column on the child table has to be indexed, if that column 
+ * is going to be used for joining the tables. That is the case with 
+ * all the id columns here*/
 
 insert into unref_fact_table(oil_id,train_id,day_date, store_nbr)
 select foht.oil_id, tt.id, tt.day_date,tt.store_nbr
@@ -236,4 +239,46 @@ left join transaction_table txt
 on txt.txn_date = tt.day_date 
 and txt.store_nbr = tt.store_nbr
 
-having multiple references to the tables is going to create unncessary 
+/*having multiple references to the tables is going to create unncessary */
+
+/*next is to alter the table and add the indexes and reference sequences */
+
+/*Starting to create the Indices on unref_fact_table*/
+
+create index oil_id_idex
+on unref_fact_table(oil_id)
+
+create index train_id_idx
+on unref_fact_table(train_id)
+
+create index store_nbr_idx
+on unref_fact_table(store_nbr)
+
+create index day_date_idx
+on unref_fact_table(day_date)
+
+
+alter table unref_fact_table 
+	add foreign key (oil_id)
+		references full_oil_holiday_table(oil_id)
+		
+		
+alter table unref_fact_table 
+	add foreign key (train_id)
+		references train_table(id)
+
+alter table unref_fact_table 
+	add foreign key (day_date)
+		references date_spine(date_series)
+
+alter table unref_fact_table 
+	add foreign key(store_nbr)
+		references stores_table(store_nbr)
+
+
+DROP INDEX unref_fact_table_oil_id_fkey
+
+ALTER TABLE users
+    ADD COLUMN last_updated_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP    
+
+

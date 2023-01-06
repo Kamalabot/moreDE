@@ -124,7 +124,9 @@ create table primary_indicator(indicator_code varchar primary key unique,
 								
 COPY primary_country FROM '/run/media/solverbot/repoA/gitFolders/rilldash/dimension_country.csv' (DELIMITER ',', HEADER);
 
-COPY primary_indicator FROM '/run/media/solverbot/repoA/gitFolders/rilldash/dimension_indicator.csv' (DELIMITER ',', HEADER);    
+COPY primary_indicator FROM '/run/media/solverbot/repoA/gitFolders/rilldash/dimension_indicator.csv' (DELIMITER ',', HEADER);
+
+COPY primary_indicator FROM '/run/media/solverbot/repoA/gitFolders/M3nD3/ObservableData/dimension_indicator.csv' DELIMITER ',' CSV HEADER;
 
 select *
 from primary_country 
@@ -134,7 +136,7 @@ select *
 from primary_indicator 
 limit 5
 
-/*strating the main table that contains the facts*/
+/*stating the main table that contains the facts*/
 
 CREATE TABLE fact_data(country_code varchar references primary_country(country_code), 
 	indicator_code varchar references primary_indicator(indicator_code), 
@@ -146,7 +148,9 @@ CREATE TABLE fact_data(country_code varchar references primary_country(country_c
 	year2018 NUMERIC ,year2019 NUMERIC ,year2020 NUMERIC ,year2021 NUMERIC
 	)
 
-COPY fact_data FROM '/run/media/solverbot/repoA/gitFolders/rilldash/facttable.csv' (DELIMITER ',', HEADER);
+COPY fact_data FROM '/run/media/solverbot/repoA/gitFolders/M3nD3/ObservableData/facttable.csv' (DELIMITER ',', HEADER);
+
+COPY fact_data FROM '/run/media/solverbot/repoA/gitFolders/M3nD3/ObservableData/facttable.csv' DELIMITER ',' CSV HEADER;
 
 select count(*)
 from fact_data

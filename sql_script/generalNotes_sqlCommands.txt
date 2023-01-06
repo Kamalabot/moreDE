@@ -1,0 +1,53 @@
+/*create sequence date_series
+as date
+start with '2013-01-01'
+increment by 1
+minvalue '2013-01-01'
+maxvalue '2017-08-15'
+*The above method fails
+*/
+
+/*SELECT
+     CAST(date_column AS DATE) date_column
+ FROM
+     (VALUES
+         (create sequence(date('2013-01-01'),
+                   date('2017-08-30'),
+                   INTERVAL '1' DAY)
+         )
+     ) AS t1(date_array)
+ CROSS JOIN
+     UNNEST(date_array) AS t2(date_column)
+ The above fails at sequence. There is no such function.
+ https://towardsdatascience.com/save-the-date-ad964b2397d0    
+     **/
+
+     
+What are the data sets I am going to create dashboards? 
+
+10) Bosch data needs to be analysed on anycost
+
+1) MS Azure 
+2) SNL Dataset
+3) NYC Collisions
+4) World Indicators
+5) Sales Forecasting Data
+6) Youtube Analysis
+7) FMCG and Company Management
+8) Aid Data
+9) Otto data. 
+
+9) Create the dashboards and complete place the databases inside Kali
+
+1) amazon_ra
+2) anns_drinks
+3) company_progress
+4) sales_target_db
+5) call_center_Kpi
+6) ticket_sales
+
+The database with above names has been already created. They will populated with the 
+tables one by one, and then used in the front-end development.
+
+Most of the queries has been written down using the python notebooks which can be found in the 
+dashboards_designs folder in github.
