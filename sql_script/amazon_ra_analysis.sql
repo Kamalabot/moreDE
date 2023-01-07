@@ -4,157 +4,150 @@
  * querying the database.
  * */
 
-create table if not exists amazon_encoded(ID varchar primary key unique,Delivery_person_ID varchar unique,
-Type_of_Vehicle varchar,
-DeliveryPersonAge numeric,
-DeliveryPersonRatings numeric,
-TypeOfVehicle numeric,
-DeliveryPersonID numeric,
-Restaurant_latitude numeric,
-Restaurant_longitude numeric,
-Delivery_location_latitude numeric,
-Delivery_location_longitude numeric,
-Order_Date numeric,
-Weather_idx numeric,Road_traffic_density_idx numeric,
-Type_of_order_idx numeric,
-multiple_deliveries_idx numeric,IntervalPickup numeric)
+SELECT * 
+FROM cleaned_data
+limit 5
 
-drop table if exists amazon_encoded 
+/*The delivery_id is unique, as there is no more than one with same id*/
 
-drop table if exists cleaned_raw_data
+/*
+THE QUERY WAS TO CHECK UNIQUENESS
+select cd.id, min(cd.deliverypersonage) as age ,
+round(avg(cd.deliverypersonratings)::numeric,2) as ratings, 
+count(cd.id) as delivery_done
+from cleaned_data cd 
+group by cd.id 
+order by delivery_done desc
+*/
 
-create table if not exists cleaned_raw_data(ID varchar primary key unique,
-Delivery_person_ID varchar,
-DeliveryPersonAge numeric,
-DeliveryPersonRatings numeric,
-Restaurant_latitude numeric,
-Restaurant_longitude numeric,
-Delivery_location_latitude numeric,
-Delivery_location_longitude numeric,
-Order_Date date,
-Time_ordered varchar, 
-time_order_picked varchar,
-Weather varchar,Road_traffic_density varchar,
-vehicle_condition numeric,
-Type_of_order varchar,
-Type_of_Vehicle varchar,
-multiple_deliveries numeric,Festival Boolean,
-city varchar, name varchar)
+create table if not exists delivery_agent_ratings
+as
+select cd.delivery_person_id, round(avg(cd.deliverypersonage)::numeric,0) as age ,
+round(avg(cd.deliverypersonratings)::numeric,2) as avg_ratings, 
+round(max(cd.deliverypersonratings)::numeric,2) as max_ratings, 
+round(min(cd.deliverypersonratings)::numeric,2) as min_ratings, 
+count(cd.id) as delivery_done
+from cleaned_data cd 
+group by cd.delivery_person_id 
+order by delivery_done desc
 
+select *
+from delivery_agent_ratings dar 
+limit 5
 
-drop table if exists cleaned_data
+select cd.order_date ,cd.delivery_person_id , cd.deliverypersonage , cd.deliverypersonratings,
+	cd.vehicle_condition , cd.type_of_vehicle 
+from cleaned_data cd 
+where cd.delivery_person_id = 'COIMBRES13DEL01'
+order by cd.order_date 
 
-create table if not exists cleaned_data(ID varchar primary key unique,
-Delivery_person_ID varchar,
-DeliveryPersonAge numeric,
-DeliveryPersonRatings numeric,
-Restaurant_latitude numeric,
-Restaurant_longitude numeric,
-Delivery_location_latitude numeric,
-Delivery_location_longitude numeric,
-Order_Date date,
-Weather varchar,Road_traffic_density varchar,
-vehicle_condition numeric,
-Type_of_order varchar,
-Type_of_Vehicle varchar,
-multiple_deliveries numeric,Festival Boolean,
-city varchar, name varchar,
-Time_ordered time, 
-time_order_picked time)
+/*The age, ratings, vehicle condition and type of vehicles all change 
+even though the id is same*/
 
-/*The below query fails, because all the conditions of the time is not checked.*/
+select cd.order_date ,cd.delivery_person_id, round(avg(cd.deliverypersonage)::numeric,0) as age ,
+round(avg(cd.deliverypersonratings)::numeric,2) as avg_ratings, 
+count(cd.id) as delivery_done
+from cleaned_data cd 
+group by cd.delivery_person_id, cd.order_date  
+having cd.delivery_person_id = 'COIMBRES13DEL01'
+order by cd.order_date desc
 
-insert into cleaned_data (ID ,Delivery_person_ID,DeliveryPersonAge ,DeliveryPersonRatings,
-		Restaurant_latitude,Restaurant_longitude ,Delivery_location_latitude,
-		Delivery_location_longitude,Order_Date,Weather,Road_traffic_density,
-		vehicle_condition,Type_of_order,Type_of_Vehicle,
-		multiple_deliveries,Festival,city, name, Time_ordered, time_order_picked)
-select crd.ID ,crd.Delivery_person_ID,crd.DeliveryPersonAge ,crd.DeliveryPersonRatings,
-		crd.Restaurant_latitude,crd.Restaurant_longitude ,crd.Delivery_location_latitude,
-		crd.Delivery_location_longitude,crd.Order_Date,Weather,crd.Road_traffic_density,
-		crd.vehicle_condition,crd.Type_of_order,crd.Type_of_Vehicle,
-		crd.multiple_deliveries,crd.Festival,crd.city, crd.name,
-		case when split_part(crd.Time_ordered, ':',2)::int = 60
-			then concat((split_part(crd.Time_ordered, ':',1)::int + 1)::varchar,':00')::time
-			else crd.Time_ordered::time
-			end as time_ordered,
-		case when split_part(crd.time_order_picked, ':',2)::int = 60
-			then concat((split_part(crd.time_order_picked, ':',1)::int + 1)::varchar,':00')::time
-			else crd.time_order_picked::time
-			end as time_ordered_picked
-from cleaned_raw_data crd
+/*Order date and deliveries*/
 
+create table if not exists order_date_count
+as
+select cd.order_date , count(cd.id) as order_count
+from cleaned_data cd 
+group by cd.order_date 
 
-select crd.Time_ordered, crd.time_order_picked
-from cleaned_raw_data crd 
-limit 35
+select * from order_date_count limit 5
 
+create table if not exists order_type_count
+as
+select cd.type_of_order, count(cd.id) as type_count
+from cleaned_data cd 
+group by cd.type_of_order 
 
-/*The below query is the trial run*/
+/*Road weather, road, order_type conditions on given day*/
+select cd.order_date , cd.weather ,cd.road_traffic_density, 
+	cd.type_of_order , cd.type_of_vehicle , cd."name" 
+from cleaned_data cd 
+where cd.order_date ='2022-04-06'
 
-select crd.ID ,crd.Delivery_person_ID,crd.DeliveryPersonAge ,crd.DeliveryPersonRatings,
-		crd.Restaurant_latitude,crd.Restaurant_longitude ,crd.Delivery_location_latitude,
-		crd.Delivery_location_longitude,crd.Order_Date,Weather,crd.Road_traffic_density,
-		crd.vehicle_condition,crd.Type_of_order,crd.Type_of_Vehicle,
-		crd.multiple_deliveries,crd.Festival,crd.city, crd.name,
-case when split_part(crd.Time_ordered, ':',1)::int = 23 and split_part(crd.Time_ordered, ':',2)::int = 60
-			then '00:00'::time
-			when split_part(crd.Time_ordered, ':',1)::int = 0 and split_part(crd.Time_ordered, ':',2)::int = 60
-			then '01:00'::time
-			when split_part(crd.Time_ordered, ':',2)::int = 60 and split_part(crd.Time_ordered, ':',1)::int != 23
-			then concat((split_part(crd.Time_ordered, ':',1)::int + 1)::varchar,':00')::time
-			when split_part(crd.Time_ordered, ':',1)::int = 24 and split_part(crd.Time_ordered, ':',2)::int != 60
-			then concat('00:',(split_part(crd.Time_ordered, ':',2)))::time
-			else crd.Time_ordered::time
-			end as time_ordered,
-			case when split_part(crd.time_order_picked, ':',1)::int = 23 and split_part(crd.time_order_picked, ':',2)::int = 60
-			then '00:00'::time
-			when split_part(crd.time_order_picked, ':',1)::int = 0 and split_part(crd.time_order_picked, ':',2)::int = 60
-			then '01:00'::time
-			when split_part(crd.time_order_picked, ':',2)::int = 60 and split_part(crd.time_order_picked, ':',1)::int != 23
-			then concat((split_part(crd.time_order_picked, ':',1)::int + 1)::varchar,':00')::time
-			when split_part(crd.time_order_picked, ':',1)::int = 24 and split_part(crd.time_order_picked, ':',2)::int != 60
-			then concat('00:',(split_part(crd.time_order_picked, ':',2)))::time
-			else crd.time_order_picked::time
-			end as time_order_picked
-from cleaned_raw_data crd
+/*The order quantity is more in metropolitan*/
+select coalesce(cd.city,'other') as city , count(cd.id) as order_per_city
+from cleaned_data cd 
+group by cd.city 
+order by order_per_city
 
+/*The order quantity is mostly drinks, while the meal is the least*/
 
+create table if not exists order_type_location_count
+as
+select cd.type_of_order , coalesce(cd.city,'other') as city , 
+	count(cd.id) as type_count
+from cleaned_data cd 
+group by cd.type_of_order, cd.city  
+order by type_count desc
 
-insert into cleaned_data (ID ,Delivery_person_ID,DeliveryPersonAge ,DeliveryPersonRatings,
-		Restaurant_latitude,Restaurant_longitude ,Delivery_location_latitude,
-		Delivery_location_longitude,Order_Date,Weather,Road_traffic_density,
-		vehicle_condition,Type_of_order,Type_of_Vehicle,
-		multiple_deliveries,Festival,city, name, Time_ordered, time_order_picked)
-select crd.ID ,crd.Delivery_person_ID,crd.DeliveryPersonAge ,crd.DeliveryPersonRatings,
-		crd.Restaurant_latitude,crd.Restaurant_longitude ,crd.Delivery_location_latitude,
-		crd.Delivery_location_longitude,crd.Order_Date,Weather,crd.Road_traffic_density,
-		crd.vehicle_condition,crd.Type_of_order,crd.Type_of_Vehicle,
-		crd.multiple_deliveries,crd.Festival,crd.city, crd.name,
-case when split_part(crd.Time_ordered, ':',1)::int = 23 and split_part(crd.Time_ordered, ':',2)::int = 60
-			then '00:00'::time
-			when split_part(crd.Time_ordered, ':',1)::int = 0 and split_part(crd.Time_ordered, ':',2)::int = 60
-			then '01:00'::time
-			when split_part(crd.Time_ordered, ':',2)::int = 60 and split_part(crd.Time_ordered, ':',1)::int != 23
-			then concat((split_part(crd.Time_ordered, ':',1)::int + 1)::varchar,':00')::time
-			when split_part(crd.Time_ordered, ':',1)::int = 24 and split_part(crd.Time_ordered, ':',2)::int != 60
-			then concat('00:',(split_part(crd.Time_ordered, ':',2)))::time
-			else crd.Time_ordered::time
-			end as time_ordered,
-			case when split_part(crd.time_order_picked, ':',1)::int = 23 and split_part(crd.time_order_picked, ':',2)::int = 60
-			then '00:00'::time
-			when split_part(crd.time_order_picked, ':',1)::int = 0 and split_part(crd.time_order_picked, ':',2)::int = 60
-			then '01:00'::time
-			when split_part(crd.time_order_picked, ':',2)::int = 60 and split_part(crd.time_order_picked, ':',1)::int != 23
-			then concat((split_part(crd.time_order_picked, ':',1)::int + 1)::varchar,':00')::time
-			when split_part(crd.time_order_picked, ':',1)::int = 24 and split_part(crd.time_order_picked, ':',2)::int != 60
-			then concat('00:',(split_part(crd.time_order_picked, ':',2)))::time
-			else crd.time_order_picked::time
-			end as time_order_picked
-from cleaned_raw_data crd
+/*Getting at the city name in the delivery_person_id*/
 
-SELECT to_timestamp('23:6]0', 'HH24:MI'); 
+create table if not exists city_delivery_counts
+as
+select count(cd.delivery_person_id) as city_count , 
+		coalesce(split_part(cd.delivery_person_id,'RE',1),'RANCHI') as city_name
+from cleaned_data cd 
+group by coalesce(split_part(cd.delivery_person_id,'RE',1),'RANCHI')
+order by city_count desc
 
+create table if not exists city_date_deliveries
+as
+select cd.order_date ,count(cd.delivery_person_id) as city_count , 
+		coalesce(split_part(cd.delivery_person_id,'RE',1),'RANCHI') as city_name
+from cleaned_data cd 
+group by coalesce(split_part(cd.delivery_person_id,'RE',1),'RANCHI'), cd.order_date 
+order by cd.order_date desc
 
+select cdc.*
+from city_delivery_counts cdc 
+limit 5
+
+select cd.time_ordered , cd.order_date, 
+		split_part(cd.time_ordered::varchar,':',1) as hour_ordered,
+		count(cd.id) 
+		over (partition by split_part(cd.time_ordered::varchar,':',1))
+		as total_orders_hour
+from cleaned_data cd 
+
+create table if not exists order_date_hour
+as
+select cd.order_date, 
+		split_part(cd.time_ordered::varchar,':',1) as hour_ordered,
+		count(cd.id) as total_orders_hour
+from cleaned_data cd 
+group by cd.order_date, split_part(cd.time_ordered::varchar,':',1)
+
+select * from order_date_hour odh 
+
+select cd.order_date ,
+	count(cd.id) over (partition by cd.order_date) as orders_today,
+	cd.delivery_person_id , 
+	coalesce(split_part(cd.delivery_person_id,'RE',1),'RANCHI') as city_name,
+	count(cd.id) 
+	over (partition by 
+			coalesce(split_part(cd.delivery_person_id,'RE',1),'RANCHI'),
+					cd.order_date) 
+	as city_orders_today,
+	cd.deliverypersonage::int , 
+	avg(round(cd.deliverypersonage,1)) 
+	over(partition by cd.delivery_person_id) 
+	as avg_age_in_id,
+	round(cd.deliverypersonratings,1) as deliveryperson_rating ,
+	max(round(cd.deliverypersonratings,1)) 
+	over(partition by cd.delivery_person_id) 
+	as max_ratings_in_id,
+	count(cd.id) 
+	over (partition by cd.delivery_person_id, cd.order_date) as delivered_today
+from cleaned_data cd 
 
 
