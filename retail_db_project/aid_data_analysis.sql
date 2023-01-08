@@ -189,7 +189,7 @@ order by ad.coalesced_purpose_code
 
 /*
  * There are 250 different purpose codes
- * Remember FJWGSO
+ * Remember 	
  * */
 
 select ad."year" , ad.coalesced_purpose_code , count(1) as counting_prpus

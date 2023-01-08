@@ -112,6 +112,20 @@ select cdc.*
 from city_delivery_counts cdc 
 limit 5
 
+with partitioned_del_counts
+as(select dense_rank () over (partition by cdd.city_name
+						order by cdd.order_date) as count_rank,
+	cdd.order_date, cdd.city_count,cdd.city_name 		
+from city_date_deliveries cdd 
+order by cdd.city_name)
+select order_date, city_count, city_name 
+from partitioned_del_counts
+where count_rank <= 3
+
+select *
+from city_date_deliveries cdd 
+order by cdd.order_date , cdd.city_name 
+
 select cd.time_ordered , cd.order_date, 
 		split_part(cd.time_ordered::varchar,':',1) as hour_ordered,
 		count(cd.id) 
