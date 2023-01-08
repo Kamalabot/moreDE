@@ -107,9 +107,11 @@ from orders
 group by order_customer_id 
 order by customer_order_count desc
 
+/*
 Additional questions:
 1) How much each customer has spent? 
 2) Which category and item_id the customer is choosing frequently? 
 3) which date there is maximum sales
 4) which type of order status is having highest value 
 5) Linking the product details, category detais, customer details , department details in the above table
+*/
