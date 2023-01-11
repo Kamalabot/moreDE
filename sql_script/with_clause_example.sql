@@ -263,6 +263,8 @@ from rank_filter
 where d_rnk <= 2
 
 
+SELECT PERCENTILE_CONT(0.9) WITHIN GROUP(ORDER BY td.qty) FROM test_data td;
+
 CREATE TABLE initial_data (
     thing TEXT, 
     start_date TEXT 
