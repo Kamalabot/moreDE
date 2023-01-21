@@ -1,0 +1,29 @@
+This file contains the commands and the notes related to Hive database.
+
+Creating table
+
+CREATE TABLE orders(
+    > order_id INT,
+    > order_date STRING,
+    > order_customer_id INT,
+    > order_status STRING
+    > ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
+
+use db_name;
+show databases;
+SELECT current_database()
+
+LOAD DATA LOCAL INPATH '/data/retail_db/orders' INTO TABLE orders;
+DESCRIBE FORMATTED orders;
+
+ /opt/spark2/bin/spark-shell --master yarn --conf spark.ui.port=0
+
+spark.sql("SELECT * FROM orders LIMIT 5").show()
+The command is similar for both spark-shell and pyspark 
+
+/opt/spark2/bin/spark-sql --master yarn --conf spark.ui.port=0
+we can directly go to spark-sql also
+ 
+
+~/dl_venv/bin/jupyter lab --ip 0.0.0.0
+
